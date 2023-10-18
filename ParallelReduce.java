@@ -8,54 +8,43 @@ public class ParallelReduce extends Thread{
     int[] array;
     int n;
     CyclicBarrier barrier;
+    int total_strides;
 
     public ParallelReduce(int tid, int[] array, CyclicBarrier barrier){
         this.tid = tid;
         this.array = array;
         n = array.length;
         this.barrier = barrier;
-    }
-
-    public static int binlog( int bits ) // returns 0 for bits=0 https://stackoverflow.com/questions/3305059/how-do-you-calculate-log-base-2-in-java-for-integers
-    {
-        int log = 0;
-        if( ( bits & 0xffff0000 ) != 0 ) { bits >>>= 16; log = 16; }
-        if( bits >= 256 ) { bits >>>= 8; log += 8; }
-        if( bits >= 16  ) { bits >>>= 4; log += 4; }
-        if( bits >= 4   ) { bits >>>= 2; log += 2; }
-        return log + ( bits >>> 1 );
+        total_strides = (int) Math.ceil(Math.log(n) / Math.log(2));
     }
 
     public void run(){
-        for (int stride = 1; stride <= binlog(n); stride++){
+        for (int stride = 1; stride <= total_strides; stride++){
 
             // read phase
             int val1 = array[2* tid];
-            int val2 = array[2*tid + 1];
-
-            try {
+            int val2 = 0;
+            if (2*tid + 1 < (int) Math.ceil(n / Math.pow(2.0, stride - 1))){
+                val2 = array[2*tid + 1];
+            }
             
+            // Synchronize threads
+            try {
                 barrier.await();
-
             } catch (Exception e) {
-
                 e.printStackTrace();
                 break;
             }
 
             // Write phase
-
-            if (tid < (int) n / Math.pow(2, stride)){
+            if (tid < (int) Math.ceil(n / Math.pow(2.0, stride))){
                 array[tid] = val1 + val2;
-
             }
 
+            // Wait for all writes
             try {
-            
                 barrier.await();
-
             } catch (Exception e) {
-
                 e.printStackTrace();
                 break;
             }
@@ -66,10 +55,9 @@ public class ParallelReduce extends Thread{
 
     public static void main(String[] args){
 
-        int[] array = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+        int[] array = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18};
         int size = array.length;
-
-        int end = size /2;
+        int end = (int) Math.ceil(size /2.0);
         ParallelReduce[] threads = new ParallelReduce[end];
         CyclicBarrier barrier = new CyclicBarrier(end);
 
