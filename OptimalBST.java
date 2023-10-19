@@ -10,13 +10,13 @@ class TID{
     }
 }
 
-class InitThread extends Thread {
+class OBSTInitThread extends Thread {
     int tid;
     int[][] sol_table;
     int[] freq_arr;
     int size;
 
-    public InitThread(int tid, int[] freq_arr, int[][] sol_table, int size){
+    public OBSTInitThread(int tid, int[] freq_arr, int[][] sol_table, int size){
         this.tid = tid;
         this.freq_arr = freq_arr;
         this.sol_table = sol_table;
@@ -159,10 +159,10 @@ public class OptimalBST{
         int[][] sol_table = new int[size][size];
 
         // * INIT
-        InitThread[] init_threads = new InitThread[size];
+        OBSTInitThread[] init_threads = new OBSTInitThread[size];
         // size = rows (since square)
         for(int i = 0; i < size; i++){
-            init_threads[i] = new InitThread(i, freq_array, sol_table, size);
+            init_threads[i] = new OBSTInitThread(i, freq_array, sol_table, size);
             init_threads[i].start();
         }
 
