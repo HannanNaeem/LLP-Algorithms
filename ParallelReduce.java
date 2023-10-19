@@ -3,14 +3,14 @@ import java.util.concurrent.CyclicBarrier;
 
 
 
-public class ParallelReduce extends Thread{
+class ParallelReduceThread extends Thread{
     int tid;
     int[] array;
     int n;
     CyclicBarrier barrier;
     int total_strides;
 
-    public ParallelReduce(int tid, int[] array, CyclicBarrier barrier){
+    public ParallelReduceThread(int tid, int[] array, CyclicBarrier barrier){
         this.tid = tid;
         this.array = array;
         n = array.length;
@@ -52,32 +52,42 @@ public class ParallelReduce extends Thread{
         }
     }
 
+}
 
-    public static void main(String[] args){
+public class ParallelReduce {
 
-        int[] array = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18};
+    public static int parallel_reduce(int[] array){
+        
         int size = array.length;
         int end = (int) Math.ceil(size /2.0);
-        ParallelReduce[] threads = new ParallelReduce[end];
+        ParallelReduceThread[] threads = new ParallelReduceThread[end];
         CyclicBarrier barrier = new CyclicBarrier(end);
 
         for (int i = 0; i < end; i++){
-            threads[i] = new ParallelReduce(i, array, barrier);
+            threads[i] = new ParallelReduceThread(i, array, barrier);
             threads[i].start();
         }
 
-        for (ParallelReduce thread: threads){
+        for (ParallelReduceThread thread: threads){
             try{
                 thread.join();
             } catch (Exception e){
-                System.out.println("Interreupted");
+                System.out.println("Interrupted");
             }
         }
         
-        System.out.println("RESULT:");
+        return array[0];
+    }
+
+
+    public static void main(String[] args){
+
+        int[] array = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17};
+        ParallelReduce.parallel_reduce(array);
+        System.out.println("RESULT: "+ array[0]);
+        System.out.println("\nFinal state:");
         for (int i : array)
             System.out.print(i + " ");
         System.out.println();
-
     }
 }
