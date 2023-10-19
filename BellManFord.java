@@ -36,7 +36,7 @@ class BMInitThread extends Thread{
     }
 }
 
-class BellManThread extends Thread{
+class BellManThread extends LLP{
 
     int tid;
     int[] array;
@@ -68,7 +68,7 @@ class BellManThread extends Thread{
         return result;
     }
 
-    private boolean check_forbidden(){
+    protected boolean check_forbidden(){
         // for all predeessors of j
         for(int i : preds){
             if (array[i] == Integer.MAX_VALUE){
@@ -82,7 +82,7 @@ class BellManThread extends Thread{
         return false;
     }
 
-    private void advance(){
+    protected void advance(){
         int min = Integer.MAX_VALUE;
         for(int i: preds){
             min = Math.min(min, array[i] + graph[i][tid]);
@@ -90,7 +90,7 @@ class BellManThread extends Thread{
         array[tid] = min;
     }
 
-    private boolean exists_forbidden(){
+    protected boolean exists_forbidden(){
 
         for(boolean b : isForbidden){
             if(b){

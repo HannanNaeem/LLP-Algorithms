@@ -35,7 +35,7 @@ class OBSTInitThread extends Thread {
     }
 }
 
-class OBSTThread extends Thread {
+class OBSTThread extends LLP {
 
     // member vars
     TID tid;
@@ -56,7 +56,7 @@ class OBSTThread extends Thread {
         this.barrier = barrier;
     }
 
-    private boolean check_forbidden(){
+    protected boolean check_forbidden(){
         int min = Integer.MAX_VALUE;
 
         for (int k = tid.i; k <= tid.j; k++){
@@ -86,7 +86,7 @@ class OBSTThread extends Thread {
         
     }
 
-    private void advance(){
+    protected void advance(){
         int min = Integer.MAX_VALUE;
 
         for(int k = tid.i; k <= tid.j; k++){
@@ -113,6 +113,11 @@ class OBSTThread extends Thread {
         sol_table[tid.i][tid.j] = min + sum;
         
 
+    }
+
+    // We do not need this. As the no. of steps are pre-countable
+    protected boolean exists_forbidden(){
+        return true;
     }
 
     // utility
