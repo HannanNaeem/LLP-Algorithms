@@ -32,7 +32,7 @@ public class BellManFord extends Thread{
         return result;
     }
 
-    public boolean check_forbidden(){
+    private boolean check_forbidden(){
         // for all predeessors of j
         for(int i : preds){
             if (array[i] == Integer.MAX_VALUE){
@@ -46,7 +46,7 @@ public class BellManFord extends Thread{
         return false;
     }
 
-    public void advance(){
+    private void advance(){
         int min = Integer.MAX_VALUE;
         for(int i: preds){
             min = Math.min(min, array[i] + graph[i][tid]);
@@ -54,7 +54,7 @@ public class BellManFord extends Thread{
         array[tid] = min;
     }
 
-    public boolean exists_forbidden(){
+    private boolean exists_forbidden(){
 
         for(boolean b : isForbidden){
             if(b){

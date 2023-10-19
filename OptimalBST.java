@@ -56,7 +56,7 @@ class OBSTThread extends Thread {
         this.barrier = barrier;
     }
 
-    private boolean is_forbidden(){
+    private boolean check_forbidden(){
         int min = Integer.MAX_VALUE;
 
         for (int k = tid.i; k <= tid.j; k++){
@@ -124,7 +124,7 @@ class OBSTThread extends Thread {
             boolean forbidden = false;
             if(tid.j < size){
                 sum = ParallelReduce.parallel_reduce(ParallelCopy.parallel_copy(this.freq_arr, tid.i, tid.j, 10));
-                forbidden = is_forbidden();
+                forbidden = check_forbidden();
             }
 
             try{
