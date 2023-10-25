@@ -1,5 +1,5 @@
 import java.util.HashSet;
-
+import java.util.concurrent.CyclicBarrier;
 
 class BMInitThread extends Thread{
     int tid;
@@ -44,9 +44,10 @@ class BellManThread extends LLP{
     int[][] graph;
     int v;
     boolean[] isForbidden;
+    CyclicBarrier barrier;
     HashSet<Integer> preds;
 
-    public BellManThread(int tid, boolean[] isForbidden, int[] array, int[][] graph){
+    public BellManThread(int tid, boolean[] isForbidden, int[] array, int[][] graph, CyclicBarrier barrier){
         this.tid = tid;
         this.array = array;
         n = array.length;
@@ -54,6 +55,7 @@ class BellManThread extends LLP{
         v = graph.length;
         this.isForbidden = isForbidden;
         preds = get_preds();
+        this.barrier = barrier;
     }
 
     private HashSet<Integer> get_preds(){
@@ -85,7 +87,11 @@ class BellManThread extends LLP{
     protected void advance(){
         int min = Integer.MAX_VALUE;
         for(int i: preds){
-            min = Math.min(min, array[i] + graph[i][tid]);
+            int val = array[i] + graph[i][tid];
+            if(array[i] == Integer.MAX_VALUE){
+                val = Integer.MAX_VALUE;
+            }
+            min = Math.min(min, val);
         }
         array[tid] = min;
     }
@@ -103,15 +109,23 @@ class BellManThread extends LLP{
     public void run(){
 
         isForbidden[tid] = check_forbidden();
+
         while(exists_forbidden()){
 
             isForbidden[tid] = check_forbidden();
 
+            try{
+                barrier.await();
+            } catch (Exception e){
+                e.printStackTrace();
+                break;
+            }
+
             if (isForbidden[tid]){
                 advance();
             }
+
         }
-        
         
     }
 
@@ -134,9 +148,10 @@ public class BellManFord {
         }
 
         BellManThread[] threads = new BellManThread[sol_array.length];
+        CyclicBarrier barrier = new CyclicBarrier(sol_array.length - 1, null);
 
         for (int i = 1; i < sol_array.length; i++){
-            threads[i] = new BellManThread(i, forbidden_array, sol_array, graph);
+            threads[i] = new BellManThread(i, forbidden_array, sol_array, graph, barrier);
             threads[i].start();
         }
 
@@ -153,7 +168,7 @@ public class BellManFord {
     }
 
     public static void main(String[] args){
-        int[][] graph = {{0,1,5,0,0},{0,0,1,0,1},{0,0,0,1,0},{0,0,0,0,1},{0,0,0,0,0}};
+        int[][] graph = {{0, 73, 25, 85, 63}, {73, 0, 55, 6, 79}, {25, 55, 0, 61, 82}, {85, 6, 61, 0, 55}, {63, 79, 82, 55, 0}};
         int[] sol_array = BellManFord.bellman_ford(graph);
         System.out.println("RESULT:");
         for (int i : sol_array)

@@ -204,7 +204,7 @@ public class OptimalBST{
     }
 
     public static void main(String[] args){
-        int[] freq = {4,2,6,3,4,5,6,2};
+        int[] freq = {76,69,75,2,80,69,68,61,41,43,33,72,18,81,86};
         int[][] sol_table = optimal_bst(freq);
         
         System.out.println("Final State:");
