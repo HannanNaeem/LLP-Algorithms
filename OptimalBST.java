@@ -1,5 +1,7 @@
 import java.io.File;
+import java.io.FileWriter;
 import java.util.concurrent.CyclicBarrier;
+import inputs.*;
 
 class TID{
     int i;
@@ -206,64 +208,71 @@ public class OptimalBST{
 
     public static void main(String[] args){
         // PARSING ARGS START -----------------------------
-        boolean run_all = true; // single test or all?
-        File input_file = new File("./inputs/OBSTInputs.txt");
-        int input_number = 0;
-        boolean write_out = false;
-    
-        for(int i = 0; i < args.length; i++){
-            if (i == 0){
-                // Expect file path
-                input_file = new File(args[i]);
-                System.out.println("File set to " + args[i]);
-
-            }
-
-            if (i == 1){
-                // Expect single/s or all
-                if(args[i].startsWith("-s")){
-                    run_all = false;
-                    System.out.println("run all  " + run_all);
-
-                }
-            }
-
-            if (!run_all && i == 2){
-                // Followed by single expect input/test number
-                try{
-                    input_number = Integer.parseInt(args[i]);
-                    System.out.println("input number  " + args[i]);
-
-                    if (input_number < 0){
-                        throw new Exception("Test/Input number cannot be less than 0");
-                    }
-                } catch (Exception e){
-                    e.printStackTrace();
-                }
-
-            }
-            if(args[i].startsWith("-o")){
-                write_out = true;
+        String[] parsed_args = ParseInput.parse_args(args, "OBST");
+        boolean run_all = Boolean.parseBoolean(parsed_args[0]); // single test or all?
+        File input_file = new File(parsed_args[1]);
+        int input_number = Integer.parseInt(parsed_args[2]);
+        boolean write_out = Boolean.parseBoolean(parsed_args[3]);
+        boolean run_tests = Boolean.parseBoolean(parsed_args[4]);;
+        File out_file = new File(parsed_args[5]);
+        File test_file = new File(parsed_args[6]);
+        // PARSING END -----------------------------
+        int failed_counter = 0;
+        
+        if (write_out){
+            try{
+                out_file.delete();
+            } catch (Exception e){
+                
             }
         }
-        // PARSING END -----------------------------
-
 
         do {
-            int[] freq = ParseInput.parse_1D(input_file, input_number, "Input");
+            int[] freq = ParseInput.parse_1D(run_tests? test_file : input_file, input_number, "Input");
             input_number++;
             if (freq == null){
                 break;
             }
             System.out.println("Running: " + (input_number-1));
+            
+            long startTime = System.nanoTime();
             int[][] sol_table = optimal_bst(freq);
-            System.out.println("Final State:");
+            long endTime = System.nanoTime();
+            double duration = (endTime - startTime)/1000000.0;  //divide by 1000000 to get milliseconds.
+            
+            // Write output and time to file
+            if (write_out){                
+                try{
+                    FileWriter writer = new FileWriter(out_file, true);
+                    GenerateOBST.write_array1D(sol_table[0], sol_table[0].length, writer, "Output(" + Integer.toString(input_number-1) + ")");
+                    writer.write("Time: " + Double.toString(duration) + " ms\n");
+                    writer.close();
+
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+            // Are we running test suite? Get expected output and compare
+            
+            if (run_tests ){
+                boolean passed = LLP.run_test_case(test_file, sol_table[0], input_number-1);
+                if(passed){
+                    System.out.println("TEST: OK");
+                } else {
+                    failed_counter++;
+                }
+            }
+            System.out.println("RESULT:");
             for(int j = 0; j < freq.length; j++){
                 System.out.print(sol_table[0][j] + " ");
             }
-            System.out.println();
+            System.out.println("\nTime: " + Double.toString(duration));
             System.out.println();
         } while(run_all);
 
+        if(run_tests){
+            System.out.println("FAILURES: "+ Integer.toString(failed_counter));
+        }
     }
 }

@@ -1,20 +1,21 @@
+package inputs;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
 
 public class GenerateOBST{
-    static File file_out = new File("OBSTInputs.txt");
+    static File file_out = new File("./inputs/OBSTInputs.txt");
     static Random rand = new Random();
 
-    private static void populate(int[] array, int size){
+    public static void populate(int[] array, int size){
         for(int i = 0; i < size; i ++){
             array[i] = (rand.nextInt(5000) + 1) % 101;
         }
     }
 
-    private static void write_array(int [] array, int size, FileWriter writer) throws IOException{
-            writer.write("Input: {");
+    public static void write_array1D(int [] array, int size, FileWriter writer, String header) throws IOException{
+            writer.write(header + ": {");
             for(int i = 0; i < size; i ++){
                 writer.write(Integer.toString(array[i]));
                 if (i != size -1){
@@ -42,7 +43,7 @@ public class GenerateOBST{
                     // populate it
                     populate(input, size);
                     // write to file
-                    write_array(input, size, writer);
+                    write_array1D(input, size, writer, "Input");
                 }
             }
 
