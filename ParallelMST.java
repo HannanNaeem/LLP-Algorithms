@@ -55,13 +55,6 @@ class ParallelMSTThread extends Thread{
 
     public void run(){
 
-        // Wait for all writes
-        try {
-            barrier.await();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }   
-
         if (minWeightEdge(pre) >= graph[pre][pred]) {
             isEnsured[pred] = true;
             result.add(new Integer[] {pred, pre});
@@ -70,10 +63,10 @@ class ParallelMSTThread extends Thread{
         else if (shortest_dist[pred] > graph[pre][pred]) {
             shortest_dist[pred] = graph[pre][pred];
             can[pred] = pre;
-            boolean isCollected = false;
+            boolean isCollected = true;
             for (int i : discovering_node){
                 if (i == pred){
-                    isCollected = true;
+                    isCollected = false;
                 }   
             }
             if (isCollected) {
@@ -113,12 +106,12 @@ public class ParallelMST{
         List<Integer> fixed_node = new ArrayList<Integer>(); // as 'R'
         List<Integer[]> result = new ArrayList<>(); // as 'T'
 
-        ParallelMSTThread[] threads = new ParallelMSTThread[size];
+        ParallelMSTThread[] threads = new ParallelMSTThread[size * size];
         CyclicBarrier barrier = new CyclicBarrier(size);
 
         waiting_node.insert(0, shortest_dist[0]);
 
-        while(waiting_node.isEmpty()) {
+        while(!waiting_node.isEmpty()) {
 
             int target = waiting_node.remove_min();
 
@@ -129,8 +122,7 @@ public class ParallelMST{
                     result.add(new Integer[] {target, g[target]});
                 }
 
-                boolean indicator = true;
-                while(indicator){
+                while (! fixed_node.isEmpty()){
 
                     List<Integer> process_pre = new ArrayList<>();
                     List<Integer> process_pred = new ArrayList<>();
@@ -145,6 +137,8 @@ public class ParallelMST{
                         }
                     }
 
+                    fixed_node.clear();
+
                     for (int i = 0; i < process_pre.size(); i++) {
                         threads[i] = new ParallelMSTThread(process_pre.get(i), process_pred.get(i), graph, discovering_node,
                         fixed_node, result, shortest_dist, g, array_check, barrier);
@@ -153,15 +147,12 @@ public class ParallelMST{
 
                     for (ParallelMSTThread thread: threads){
                         try{
+                            thread.interrupt();
                             thread.join();
                         } catch (Exception e){
                             System.out.println("Interreupted");
                         }
                     }   
-
-                    if (fixed_node.isEmpty()) {
-                        indicator = false;
-                    }
                 }             
 
                 for (int z : discovering_node) {

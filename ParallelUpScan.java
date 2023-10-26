@@ -55,7 +55,7 @@ class ParallelUpScanThread extends Thread{
         isEnsured[tid] = check_forbidden();
         int temp = ensure();
 
-        // wait for
+        // wait for all writes
         try {
             barrier.await();
         } catch (Exception e) {
@@ -104,8 +104,11 @@ public class ParallelUpScan{
             }
         }
 
+
+
         for (ParallelUpScanThread thread: threads){
             try{
+                thread.interrupt();
                 thread.join();
             } catch (Exception e){
                 System.out.println("Interreupted");

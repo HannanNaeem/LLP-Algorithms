@@ -141,6 +141,7 @@ public class ParallelDownScan{
 
         for (ParallelDownScanThread thread: threads){
             try{
+                thread.interrupt();
                 thread.join();
             } catch (Exception e){
                 System.out.println("Interreupted");
