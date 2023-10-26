@@ -67,7 +67,6 @@ public class ParseInput {
                         data = data.trim();
                         data = data.replace("{", "");
                         data = data.replace("}", "");
-                        System.out.println(data);
                     } else {
                         continue;
                     }
@@ -126,6 +125,14 @@ public class ParseInput {
             }
             System.out.println();
         }
+
+        File in_test5 = new File("./inputs/OBSTTestCasesTeam1.txt");
+        int[] result5 = parse_1D(in_test5, 1, "Expected");
+        System.out.println("PARSE TEST EXPECTED OBST TEAM 1: ");
+        for(int i : result5){
+            System.out.print(i + " ");
+        }
+        System.out.println();
 
     }
 }
