@@ -8,7 +8,7 @@ The root directory has the main algorithm classes (which can be invoked.. descri
 - `tests` sub-directory contains separate files with inputs and expected outputs for each Algorithm
 
 ## Bellman Ford and Optimal BST -- @HannanNaeem
-### Running the algorithms (Skip to [tests]([/guides/content/editing-an-existing-page#modifying-front-matter](https://github.com/HannanNaeem/LLP-Algorithms/edit/main/README.md#tests)) for TLDR)
+### Running the algorithms (Skip to [tests](#tests) for TLDR)
 #### Inputs
 The algorithms can be complied and run on the default inputs (`inputs/BellManFordInputs.txt` and `inputs/OBSTInputs.txt` respectively). Using BellManFord as an example:
 ```
