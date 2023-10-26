@@ -188,6 +188,7 @@ public class BellManFord {
         boolean run_all = true; // single test or all?
         File input_file = new File("./inputs/BellManInputs.txt");
         int input_number = 0;
+        boolean write_out = false;
 
         for(int i = 0; i < args.length; i++){
             if (i == 0){
@@ -199,7 +200,7 @@ public class BellManFord {
 
             if (i == 1){
                 // Expect single/s or all
-                if(args[i].startsWith("s")){
+                if(args[i].startsWith("-s")){
                     run_all = false;
                     System.out.println("run all  " + run_all);
 
@@ -219,6 +220,9 @@ public class BellManFord {
                     e.printStackTrace();
                 }
 
+            }
+            if(args[i].startsWith("-o")){
+                write_out = true;
             }
         }
         // PARSING END -----------------------------
