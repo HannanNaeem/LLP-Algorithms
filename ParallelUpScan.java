@@ -59,7 +59,7 @@ class ParallelUpScanThread extends Thread{
         try {
             barrier.await();
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
 
         if (!isEnsured[tid]){
@@ -70,7 +70,7 @@ class ParallelUpScanThread extends Thread{
         try {
             barrier.await();
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }                
     }
     
@@ -78,33 +78,40 @@ class ParallelUpScanThread extends Thread{
 
 public class ParallelUpScan{
 
-    public static int[] parallelUpScan(int[] origin) {
-
-        int size = origin.length - 1;
+    public static int[] parallelUpScan(int[] origin_array) {
+        
+        int size = (1 << (32 - Integer.numberOfLeadingZeros(origin_array.length - 1))) - 1;
         int[] array = IntStream
             .generate(() -> Integer.MIN_VALUE)
             .limit(size)
+            .toArray();
+        int[] origin_extended = IntStream
+            .generate(() -> 0)
+            .limit(size + 1)
             .toArray();
         boolean[] array_check = new boolean[size];
 
         ParallelUpScanThread[] threads = new ParallelUpScanThread[size];
         CyclicBarrier barrier = new CyclicBarrier(size);
 
+        for (int i = 0; i < origin_array.length; i++){
+            origin_extended[i] = origin_array[i];
+        }
+
         boolean indicator = false;
         while(!indicator) {
             for (int i = 0; i < size; i++){
-                threads[i] = new ParallelUpScanThread(i, origin, array, array_check, barrier);
+                threads[i] = new ParallelUpScanThread(i, origin_extended, array, array_check, barrier);
                 threads[i].start();
             }
             indicator = true;
             for (int i = 0; i < size; i++){
                 if (!array_check[i]) {
                     indicator = false;
+                    break;
                 } 
             }
         }
-
-
 
         for (ParallelUpScanThread thread: threads){
             try{
@@ -120,8 +127,8 @@ public class ParallelUpScan{
 
     public static void main(String[] args){
 
-        int[] origin = {1,2,3,4,5,6,7,8};
-        int[] result = parallelUpScan(origin);
+        int[] a = {1,2,3,4,5,6,7,0};
+        int[] result = parallelUpScan(a);
         
         System.out.println("RESULT:");
         for (int i : result)

@@ -1,3 +1,5 @@
+import java.io.File;
+import java.util.Arrays;
 import java.util.concurrent.CyclicBarrier;
 import java.util.stream.IntStream;
 
@@ -94,7 +96,7 @@ class ParallelDownScanThread extends Thread{
         try {
             barrier.await();
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
 
         if (!isEnsured[tid]){
@@ -105,7 +107,7 @@ class ParallelDownScanThread extends Thread{
         try {
             barrier.await();
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }                
     }
     
@@ -113,28 +115,38 @@ class ParallelDownScanThread extends Thread{
 
 public class ParallelDownScan{
 
-    public static int[] parallelDownScan(int[] origin, int[] sumtree) {
+    public static int[] parallelDownScan(int[] origin_array, int[] sumtree) {
 
-        int size = 2 * origin.length - 1;
+        int length_ext = (1 << (32 - Integer.numberOfLeadingZeros(origin_array.length - 1)));
+        int size = 2 * length_ext - 1;
         int[] array = IntStream
             .generate(() -> Integer.MIN_VALUE)
             .limit(size)
+            .toArray();
+        int[] origin_extended = IntStream
+            .generate(() -> 0)
+            .limit(length_ext)
             .toArray();
         boolean[] array_check = new boolean[size];
 
         ParallelDownScanThread[] threads = new ParallelDownScanThread[size];
         CyclicBarrier barrier = new CyclicBarrier(size);
 
+        for (int i = 0; i < origin_array.length; i++){
+            origin_extended[i] = origin_array[i];
+        }
+
         boolean indicator = false;
         while(!indicator) {
             for (int i = 0; i < size; i++){
-                threads[i] = new ParallelDownScanThread(i, origin, sumtree, array, array_check, barrier);
+                threads[i] = new ParallelDownScanThread(i, origin_extended, sumtree, array, array_check, barrier);
                 threads[i].start();
             }
             indicator = true;
             for (int i = 0; i < size; i++){
                 if (!array_check[i]) {
                     indicator = false;
+                    break;
                 } 
             }
         }
@@ -148,19 +160,79 @@ public class ParallelDownScan{
             }
         }
 
-        return array;
+        // Compulte the final sum for each node
+        int[] array_result = Arrays.copyOfRange(
+            array, length_ext-1, length_ext + origin_array.length - 1);
+
+        for (int i = 0; i < origin_array.length; i++) {
+            array_result[i] += origin_array[i];
+        }
+
+        return array_result;
     }
 
     public static void main(String[] args){
+        // PARSING ARGS START -----------------------------
+        boolean run_all = true; // single test or all?
+        File input_file = new File("./inputs/ScanInput.txt");
+        int input_number = 0;
+        boolean write_out = false;
+    
+        for(int i = 0; i < args.length; i++){
+            if (i == 0){
+                // Expect file path
+                input_file = new File(args[i]);
+                System.out.println("File set to " + args[i]);
 
-        int[] origin = {1,2,3,4,5,6,7,8};
-        int[] up_tree = ParallelUpScan.parallelUpScan(origin);
-        int[] result = parallelDownScan(origin, up_tree);
-        
-        System.out.println("RESULT:");
-        for (int i : result)
-            System.out.print(i + " ");
-        System.out.println();
+            }
+
+            if (i == 1){
+                // Expect single/s or all
+                if(args[i].startsWith("-s")){
+                    run_all = false;
+                    System.out.println("run all  " + run_all);
+
+                }
+            }
+
+            if (!run_all && i == 2){
+                // Followed by single expect input/test number
+                try{
+                    input_number = Integer.parseInt(args[i]);
+                    System.out.println("input number  " + args[i]);
+
+                    if (input_number < 0){
+                        throw new Exception("Test/Input number cannot be less than 0");
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+            if(args[i].startsWith("-o")){
+                write_out = true;
+            }
+        }
+        // PARSING END -----------------------------
+
+
+        do {
+            int[] freq = ParseInput.parse_1D(input_file, input_number, "Input");
+            input_number++;
+            if (freq == null){
+                break;
+            }
+            System.out.println("Running: " + (input_number-1));
+            int[] up_tree = ParallelUpScan.parallelUpScan(freq);
+            int[] result = parallelDownScan(freq, up_tree);
+
+            System.out.println("Final State:");
+            for(int j = 0; j < result.length; j++){
+                System.out.print(result[j] + " ");
+            }
+            System.out.println();
+            System.out.println();
+        } while(run_all);
 
     }
     
