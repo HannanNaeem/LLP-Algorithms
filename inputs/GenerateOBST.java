@@ -27,7 +27,7 @@ public class GenerateOBST{
     public static void main(String[] args){
         // Expect start and end sizes and test for each size if not use default values
         int start_size = 10;
-        int end_size = 10000;
+        int end_size = 100;
         int each_size_test = 5;
         int[] input;
 

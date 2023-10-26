@@ -42,9 +42,7 @@ public class ParseInput {
             } catch (Exception e){
                 e.printStackTrace();
             }
-        if (result == null){
-            System.out.println("[ERROR] FAILED TO FIND INPUT");
-        }
+
         return result;
     }
 
@@ -82,9 +80,7 @@ public class ParseInput {
             } catch (Exception e){
                 e.printStackTrace();
             }
-        if (result == null){
-            System.out.println("[ERROR] FAILED TO FIND INPUT");
-        }
+
         return result;
     }
 
@@ -117,7 +113,7 @@ public class ParseInput {
         System.out.println();
 
         File in_test4 = new File("./inputs/BellManTestCasesTeam1.txt");
-        int[][] result4 = parse_2D(in_test4, 1, "Input");
+        int[][] result4 = parse_2D(in_test4, 2, "Input");
         System.out.println("PARSE TEST BELLMAN TEAM 1: ");
         for(int i = 0; i < result4.length; i ++){
             for(int j = 0; j < result4.length; j++){

@@ -1,3 +1,4 @@
+import java.io.File;
 import java.util.concurrent.CyclicBarrier;
 
 class TID{
@@ -179,7 +180,7 @@ public class OptimalBST{
                 System.out.println("Interrupted");
             }
         }
-       
+
 
         //* RUN THREADS
         OBSTThread[] threads = new OBSTThread[size-1]; //
@@ -189,7 +190,7 @@ public class OptimalBST{
             threads[i] = new OBSTThread(new TID(i, i+1), freq_array, sol_table, barrier);
             threads[i].start();
         }
-        
+
         // wait for threads to finish
         for(int i = 0; i < size -1; i++){
             try{
@@ -204,16 +205,61 @@ public class OptimalBST{
     }
 
     public static void main(String[] args){
-        int[] freq = {76,69,75,2,80,69,68,61,41,43,33,72,18,81,86};
-        int[][] sol_table = optimal_bst(freq);
-        
-        System.out.println("Final State:");
-        for(int i = 0; i < freq.length; i++){
+        // PARSING ARGS START -----------------------------
+        boolean run_all = true; // single test or all?
+        File input_file = new File("./inputs/OBSTInputs.txt");
+        int input_number = 0;
+
+        for(int i = 0; i < args.length; i++){
+            if (i == 0){
+                // Expect file path
+                input_file = new File(args[i]);
+                System.out.println("File set to " + args[i]);
+
+            }
+
+            if (i == 1){
+                // Expect single/s or all
+                if(args[i].startsWith("s")){
+                    run_all = false;
+                    System.out.println("run all  " + run_all);
+
+                }
+            }
+
+            if (!run_all && i == 2){
+                // Followed by single expect input/test number
+                try{
+                    input_number = Integer.parseInt(args[i]);
+                    System.out.println("input number  " + args[i]);
+
+                    if (input_number < 0){
+                        throw new Exception("Test/Input number cannot be less than 0");
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        }
+        // PARSING END -----------------------------
+
+
+        do {
+            int[] freq = ParseInput.parse_1D(input_file, input_number, "Input");
+            input_number++;
+            if (freq == null){
+                break;
+            }
+            System.out.println("Running: " + (input_number-1));
+            int[][] sol_table = optimal_bst(freq);
+            System.out.println("Final State:");
             for(int j = 0; j < freq.length; j++){
-                System.out.print(sol_table[i][j] + " ");
+                System.out.print(sol_table[0][j] + " ");
             }
             System.out.println();
-        }
+            System.out.println();
+        } while(run_all);
 
     }
 }

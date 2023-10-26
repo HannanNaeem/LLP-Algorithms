@@ -1,5 +1,6 @@
 import java.util.HashSet;
 import java.util.concurrent.CyclicBarrier;
+import java.io.File;
 
 class BMInitThread extends Thread{
     int tid;
@@ -93,7 +94,9 @@ class BellManThread extends LLP{
             }
             min = Math.min(min, val);
         }
-        array[tid] = min;
+        if (min > 0){
+            array[tid] = min;
+        }
     }
 
     protected boolean exists_forbidden(){
@@ -109,10 +112,14 @@ class BellManThread extends LLP{
     public void run(){
 
         isForbidden[tid] = check_forbidden();
-
+    
+        try{
+            barrier.await();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        // Always sync up before, accessing forbidden array: everyone must see the same state
         while(exists_forbidden()){
-
-            isForbidden[tid] = check_forbidden();
 
             try{
                 barrier.await();
@@ -121,8 +128,17 @@ class BellManThread extends LLP{
                 break;
             }
 
+            isForbidden[tid] = check_forbidden();
+
             if (isForbidden[tid]){
                 advance();
+            }
+
+            try{
+                barrier.await();
+            } catch (Exception e){
+                e.printStackTrace();
+                break;
             }
 
         }
@@ -168,11 +184,60 @@ public class BellManFord {
     }
 
     public static void main(String[] args){
-        int[][] graph = {{0, 73, 25, 85, 63}, {73, 0, 55, 6, 79}, {25, 55, 0, 61, 82}, {85, 6, 61, 0, 55}, {63, 79, 82, 55, 0}};
-        int[] sol_array = BellManFord.bellman_ford(graph);
-        System.out.println("RESULT:");
-        for (int i : sol_array)
-            System.out.print(i + " ");
-        System.out.println();
+        // PARSING ARGS START -----------------------------
+        boolean run_all = true; // single test or all?
+        File input_file = new File("./inputs/BellManInputs.txt");
+        int input_number = 0;
+
+        for(int i = 0; i < args.length; i++){
+            if (i == 0){
+                // Expect file path
+                input_file = new File(args[i]);
+                System.out.println("File set to " + args[i]);
+
+            }
+
+            if (i == 1){
+                // Expect single/s or all
+                if(args[i].startsWith("s")){
+                    run_all = false;
+                    System.out.println("run all  " + run_all);
+
+                }
+            }
+
+            if (!run_all && i == 2){
+                // Followed by single expect input/test number
+                try{
+                    input_number = Integer.parseInt(args[i]);
+                    System.out.println("input number  " + args[i]);
+
+                    if (input_number < 0){
+                        throw new Exception("Test/Input number cannot be less than 0");
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        }
+        // PARSING END -----------------------------
+
+        do {
+            int[][] graph = ParseInput.parse_2D(input_file, input_number, "Input");
+            input_number++;
+            if (graph == null){
+                break;
+            }
+            System.out.println("Running: " + (input_number-1));
+
+            int[] sol_array = BellManFord.bellman_ford(graph);
+            System.out.println("RESULT:");
+            for (int i : sol_array)
+                System.out.print(i + " ");
+            System.out.println();
+            System.out.println();
+        } while(run_all);
+
     }
 }
