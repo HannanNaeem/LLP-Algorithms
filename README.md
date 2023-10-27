@@ -1,5 +1,5 @@
 # LLP-Algorithms
-Implementation of a few well known algorithms using lattice-linear predicates
+Implementation of a few well known algorithms using lattice-linear predicates.
 
 ## Directory Structure
 The root directory has the main algorithm classes (which can be invoked.. described later).
@@ -91,4 +91,8 @@ Here are some other combination of commands that might be useful:
 Expects a adjacency matrix with no negative cycles, refer to inputs for format. Output is a single array with shortest distances of the first vertex to all others
 ### Optimal BST
 Expects a single frequency array. Output is the first row of the cost table against each node
+### Parallel Prefix-sum
+Expects a single array. Output is the sum of all possible prefixes from the original array.
+### Prim's MST
+Expects a single array. Output is the weight of the result edge from each node.
 
