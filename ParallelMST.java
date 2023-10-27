@@ -3,6 +3,7 @@ import java.util.stream.IntStream;
 
 
 import java.util.List;
+import java.io.File;
 import java.util.ArrayList;
 
 
@@ -13,7 +14,7 @@ class ParallelMSTThread extends Thread{
     int[] shortest_dist;
     List<Integer> discovering_node; // as 'Q'
     List<Integer> fixed_node; // as 'R'
-    List<Integer[]> result; // as 'T'
+    int[] result; // as 'T'
 
     int[] can; // candidate array G
     boolean[] isEnsured;
@@ -24,7 +25,7 @@ class ParallelMSTThread extends Thread{
 
     public ParallelMSTThread(int pre, int pred, int[][] graph, 
             List<Integer> discovering_node, List<Integer> fixed_node, 
-            List<Integer[]> result, int[] shortest_dist,
+            int[] result, int[] shortest_dist,
             int[] candidate, boolean[] isEnsured, CyclicBarrier barrier){
         this.pre = pre;
         this.pred = pred;
@@ -45,7 +46,7 @@ class ParallelMSTThread extends Thread{
     public int minWeightEdge(int a) {
         int result = Integer.MAX_VALUE;
         for (int i = 0; i < n; i++) {
-            if (graph[a][i] < result) {
+            if ((graph[a][i] < result) && (graph[a][i] != -1)) {
                 result = graph[a][i];
             }
         }
@@ -57,7 +58,7 @@ class ParallelMSTThread extends Thread{
 
         if (minWeightEdge(pre) >= graph[pre][pred]) {
             isEnsured[pred] = true;
-            result.add(new Integer[] {pred, pre});
+            result[pred] = graph[pred][pre];
             fixed_node.add(pred);
         }
         else if (shortest_dist[pred] > graph[pre][pred]) {
@@ -78,7 +79,7 @@ class ParallelMSTThread extends Thread{
         try {
             barrier.await();
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }                
     }
     
@@ -86,12 +87,14 @@ class ParallelMSTThread extends Thread{
 
 public class ParallelMST{
 
-    static final int PINF = Integer.MAX_VALUE;
-
-    public static List<Integer[]> parallelMST(int[][] graph) {
+    public static int[] parallelMST(int[][] graph) {
 
         int size = graph.length;
         int[] g = IntStream
+            .generate(() -> -1)
+            .limit(size)
+            .toArray();
+        int[] result = IntStream
             .generate(() -> -1)
             .limit(size)
             .toArray();
@@ -104,7 +107,6 @@ public class ParallelMST{
         NodeDist waiting_node = new NodeDist(); // as 'H'
         List<Integer> discovering_node = new ArrayList<Integer>(); // as 'Q'
         List<Integer> fixed_node = new ArrayList<Integer>(); // as 'R'
-        List<Integer[]> result = new ArrayList<>(); // as 'T'
 
         ParallelMSTThread[] threads = new ParallelMSTThread[size * size];
         CyclicBarrier barrier = new CyclicBarrier(size);
@@ -119,7 +121,7 @@ public class ParallelMST{
                 fixed_node.add(target);
                 array_check[target] = true;
                 if (g[target] != -1) {
-                    result.add(new Integer[] {target, g[target]});
+                    result[target] = graph[target][g[target]];
                 }
 
                 while (! fixed_node.isEmpty()){
@@ -130,7 +132,7 @@ public class ParallelMST{
                         for (int j = 0; j < size; j++){
                             if ((i != j) 
                                     && (!array_check[j]) 
-                                    && (graph[i][j] < PINF)) {
+                                    && (graph[i][j] != -1)) {
                                 process_pre.add(i);
                                 process_pred.add(j);
                             }
@@ -147,8 +149,10 @@ public class ParallelMST{
 
                     for (ParallelMSTThread thread: threads){
                         try{
-                            thread.interrupt();
-                            thread.join();
+                            if (thread != null){
+                                thread.interrupt();
+                                thread.join();
+                            }
                         } catch (Exception e){
                             System.out.println("Interreupted");
                         }
@@ -168,21 +172,65 @@ public class ParallelMST{
     }
 
     public static void main(String[] args){
+        // PARSING ARGS START -----------------------------
+        boolean run_all = true; // single test or all?
+        File input_file = new File("./inputs/PrimsInput.txt");
+        int input_number = 0;
+        boolean write_out = false;
 
-        int[][] graph = {{PINF, 5, 4, PINF, PINF},
-                         {5, PINF, 3, 7, PINF},
-                         {4, 3, PINF, 9, 11},
-                         {PINF, 7, 9, PINF, 2},
-                         {PINF, PINF, 11, 2, PINF}};
-        List<Integer[]> result = parallelMST(graph);
+        for(int i = 0; i < args.length; i++){
+            if (i == 0){
+                // Expect file path
+                input_file = new File(args[i]);
+                System.out.println("File set to " + args[i]);
 
-        System.out.println("RESULT:");
-        for (Integer[] i : result) {
-            for (int j : i) {
-                System.out.print(j + " ");
             }
+
+            if (i == 1){
+                // Expect single/s or all
+                if(args[i].startsWith("-s")){
+                    run_all = false;
+                    System.out.println("run all  " + run_all);
+
+                }
+            }
+
+            if (!run_all && i == 2){
+                // Followed by single expect input/test number
+                try{
+                    input_number = Integer.parseInt(args[i]);
+                    System.out.println("input number  " + args[i]);
+
+                    if (input_number < 0){
+                        throw new Exception("Test/Input number cannot be less than 0");
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+            if(args[i].startsWith("-o")){
+                write_out = true;
+            }
+        }
+        // PARSING END -----------------------------
+
+        do {
+            int[][] graph = ParseInput.parse_2D(input_file, input_number, "Input");
+            input_number++;
+            if (graph == null){
+                break;
+            }
+            System.out.println("Running: " + (input_number-1));
+
+            int[] sol_array = parallelMST(graph);
+
+            System.out.println("RESULT:");
+            for (int i : sol_array)
+                System.out.print(i + " ");
             System.out.println();
-        }    
+            System.out.println();
+        } while(run_all);
 
     }
     
