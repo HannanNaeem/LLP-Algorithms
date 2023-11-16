@@ -185,8 +185,8 @@ if __name__ == "__main__":
         print(openmp_graph)
         print(new_min_neighbors)
         print(component_mins)
+        print("Picked: ")
         print(new_min_edges)
-        print("Picked: 8")
         break
 
     ## Run Cuda Instance
