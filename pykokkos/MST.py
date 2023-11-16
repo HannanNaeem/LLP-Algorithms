@@ -36,8 +36,6 @@ def llp_boruvka(tid, sol_view, forbidden_view, dim):
         if forbidden_view[i] == 1:
             exists_forbidden = 1
             break
-    
-    pk.fence()
 
     while(exists_forbidden):
 
@@ -46,7 +44,7 @@ def llp_boruvka(tid, sol_view, forbidden_view, dim):
         if sol_view[tid] != sol_view[sol_view[tid]]:
             forbidden_view[tid] = 1
         
-        pk.fence()
+
         # if I am forbidden, advance -- write phase
         if forbidden_view[tid]:
             sol_view[tid] = sol_view[sol_view[tid]]
@@ -57,7 +55,6 @@ def llp_boruvka(tid, sol_view, forbidden_view, dim):
                 exists_forbidden = 1
                 break
         
-        pk.fence()
 
 # reduce graph to components and start over, until we have only one vertex
 @pk.workunit
@@ -87,9 +84,9 @@ def component_min(tid, sol_view, mins_view, component_mins, dim):
             # same compenent
             component_mins[tid] = mins_view[i]
 
-@pk.workunit # call for each row
-def update_min_neighbours(tid, sol_view, mins_view, component_mins, new_sol_array, dim):
-    # for each edge
+@pk.workunit #
+def update_min_edges(tid, sol_view, mins_view, component_mins, new_sol_array, dim):
+    # collapse multi-edges and get the mins between stars
     pass
 
 @pk.workunit
